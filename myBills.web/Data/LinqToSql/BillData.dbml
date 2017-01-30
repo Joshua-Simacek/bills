@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?><Database Name="Omega" Class="BillDataDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+  <Connection Mode="WebSettings" ConnectionString="Data Source=JOSHUA-LAPTOP\SQLEXPRESS2016;Initial Catalog=Omega;Integrated Security=True" SettingsObjectName="System.Configuration.ConfigurationManager.ConnectionStrings" SettingsPropertyName="OmegaConnectionString" Provider="System.Data.SqlClient" />
+  <Table Name="dbo.bills" Member="bills">
+    <Type Name="bill">
+      <Column Name="name" Type="System.String" DbType="VarChar(64)" CanBeNull="true" />
+      <Column Name="amount" Type="System.Decimal" DbType="Decimal(18,4)" CanBeNull="true" />
+      <Column Name="pay_type" Type="System.Char" DbType="Char(1)" CanBeNull="true" />
+      <Column Name="day_of_month" Type="System.Byte" DbType="TinyInt" CanBeNull="true" />
+      <Column Name="seed_date" Type="System.DateTime" DbType="Date" CanBeNull="true" />
+      <Column Name="day_of_week" Type="System.Byte" DbType="TinyInt" CanBeNull="true" />
+      <Column Name="pay_interval" Type="System.Char" DbType="Char(1)" CanBeNull="true" />
+    </Type>
+  </Table>
+</Database>

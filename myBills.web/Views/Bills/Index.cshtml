@@ -1,0 +1,165 @@
+﻿@model myBills.web.Models.BillsViewModel
+
+<style>
+    form-control {
+        width: 100%;
+    }
+    hr{
+        margin:2px;
+    }
+    th{
+        cursor:pointer;
+    }
+    #payGroup label{
+        text-align:right;
+    }
+</style>
+
+<div class="col-md-1">
+    <div class="row">&nbsp;</div>
+</div>
+
+<div class="col-md-3">
+    <table class="table table-condensed tabe-hover" id="billsTable">
+        <thead>
+            <tr>
+                <th id="nameHeader" data-type="string">Name</th>
+                <th id="sp1">&nbsp;</th>
+                <th id="amountHeader" data-type="money">Amount</th>
+                <th id="sp2">&nbsp;</th>
+                <th id="dueHeader" data-type="date">Due</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var bill in Model.Bills)
+            {
+                var css = bill.NextDueDate(Model.LastPayDay) < Model.NextPayDay ? "text-danger" : "";
+                <tr class="@css">
+                    <td>@bill.Name</td>
+                    <td>&nbsp;</td>
+                    <td>
+                        $<span class="pull-right">
+                            @bill.Amount.ToString("0.00")
+                        </span>
+                    </td>
+                    <td>&nbsp;</td>
+                    <td class="text-right">@bill.NextDueDate(Model.LastPayDay).ToString("MM/dd/yyyy")</td>
+                </tr>
+            }
+            <tr data-ignore="true">
+                <td class="text-right">Total:</td>
+                <td></td>
+                <td>$<span class="pull-right">@Model.Total.ToString("0.00")</span></td>
+                <td></td>
+                <td id="totalDue">$<span class="text-danger pull-right">@Model.TotalDue.ToString("0.00")</span></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="col-md-4 form-horizontal" id="payGroup">
+    <div class="row">&nbsp;</div>
+    <div class="form-group">
+        @Html.Label("Last Pay Day", new { @class = "col-md-3" })
+        <div class="col-md-6">
+            @Model.LastPayDay.ToString("MM/dd/yyyy")
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.Label("Next Pay Day", new { @class = "col-md-3" })
+        <div class="col-md-6">
+            @Model.NextPayDay.ToString("MM/dd/yyyy")
+        </div>
+    </div>
+    @using (Html.BeginForm("Index", "Bills", FormMethod.Post))
+    {
+        <div class="form-group">
+            @Html.Label("Date", new { @class = "col-md-2 control-label" })
+            <div class="col-md-4">
+                @Html.TextBox("Date", DateTime.Now.ToShortDateString(), new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-6">
+                <input type="submit" value="submit" class="btn btn-sm btn-success pull-right" />
+            </div>
+        </div>
+    }
+</div>
+
+@*<div id="newBillModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">New Bill</h4>
+            </div>
+            <div class="modal-body">
+                <p>One fine body&hellip;</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="col-md-3">
+    <div class="form-horizontal">
+        <div class="col-md-3">
+            <button type="button" data-toggle="modal" data-target="#newBillModal" class="btn btn-success">New Bill</button>
+        </div>
+    </div>
+</div>*@
+
+
+
+@section scripts{
+    <script>
+        $(function () {
+            $("#Date").datepicker();
+            $("#PayDay").datepicker();
+        });
+
+        $("#Date").change(function () {
+
+        });
+
+        function sortTable(tbl, col, order) {
+            var asc = order == "asc";
+            var index = $("#" + col).index();
+            var money = $("#" + col).data("type") == "money";
+            var tbody = $("#" + tbl).find("tbody");
+            tbody.find("tr").sort(function (a, b) {
+                if ($(a).data("ignore") || $(b).data("ignore")) {
+                    return;
+                }
+                var tdA = $("td:eq(" + index + ")", a);
+                var tdB = $("td:eq(" + index + ")", b);
+
+                var aText = tdA.text();
+                var bText = tdB.text();
+
+                if (money) {
+                    return asc
+                        ? parseFloat(aText.replace("$", "").replace(" ", "")) - parseFloat(bText.replace("$", "").replace(" ", "")) 
+                        : parseFloat(bText.replace("$", "").replace(" ", "")) - parseFloat(aText.replace("$", "").replace(" ", ""))
+                }
+                return asc ? aText.localeCompare(bText) : bText.localeCompare(aText);
+            }).appendTo(tbody);
+        }
+
+        sortByHeader = function() {
+            var order = $(this).data("sort");
+            order = order === "asc" ? "desc" : "asc";
+            sortTable("billsTable", $(this)[0].id, order);
+            $(this).data("sort", order);
+        }
+
+        $("th").click(sortByHeader);
+
+
+
+    </script>
+}
