@@ -133,7 +133,7 @@
             var tbody = $("#" + tbl).find("tbody");
             tbody.find("tr").sort(function (a, b) {
                 if ($(a).data("ignore") || $(b).data("ignore")) {
-                    return;
+                    return 0;
                 }
                 var tdA = $("td:eq(" + index + ")", a);
                 var tdB = $("td:eq(" + index + ")", b);
