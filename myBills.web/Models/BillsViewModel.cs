@@ -1,9 +1,7 @@
-﻿using myBills.web.Data;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using myBills.web.Data;
 
 namespace myBills.web.Models
 {

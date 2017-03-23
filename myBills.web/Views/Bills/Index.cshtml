@@ -1,4 +1,6 @@
-﻿@model myBills.web.Models.BillsViewModel
+﻿@*@model myBills.web.Models.BillsViewModel*@
+@{ViewBag.Title = "Bills";}
+
 
 <style>
     form-control {
@@ -13,117 +15,216 @@
     #payGroup label{
         text-align:right;
     }
+
+    table > tbody > tr > td[data-control='delete'],
+    table > thead > tr > th[data-control='add']{
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 16px;
+        padding: 4px 0px 0px 5px;
+    }
+
+    table > thead > tr > th[data-control='add'] {
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 16px;
+        padding: 0px 0px 3px 5px;
+        color: darkgreen;
+    }
+
+    #newbill-dialog-form .form-control{
+        height: 24px;
+        border-radius: 0px;
+        padding: 2px;
+    }
+
+    #newbill-dialog-form .form-group{
+        margin-bottom: 5px;
+    }
+
 </style>
 
 <div class="col-md-1">
     <div class="row">&nbsp;</div>
 </div>
 
-<div class="col-md-3">
-    <table class="table table-condensed tabe-hover" id="billsTable">
-        <thead>
-            <tr>
-                <th id="nameHeader" data-type="string">Name</th>
-                <th id="sp1">&nbsp;</th>
-                <th id="amountHeader" data-type="money">Amount</th>
-                <th id="sp2">&nbsp;</th>
-                <th id="dueHeader" data-type="date">Due</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var bill in Model.Bills)
-            {
-                var css = bill.NextDueDate(Model.LastPayDay) < Model.NextPayDay ? "text-danger" : "";
-                <tr class="@css">
-                    <td>@bill.Name</td>
-                    <td>&nbsp;</td>
-                    <td>
-                        $<span class="pull-right">
-                            @bill.Amount.ToString("0.00")
-                        </span>
-                    </td>
-                    <td>&nbsp;</td>
-                    <td class="text-right">@bill.NextDueDate(Model.LastPayDay).ToString("MM/dd/yyyy")</td>
-                </tr>
-            }
-            <tr data-ignore="true">
-                <td class="text-right">Total:</td>
-                <td></td>
-                <td>$<span class="pull-right">@Model.Total.ToString("0.00")</span></td>
-                <td></td>
-                <td id="totalDue">$<span class="text-danger pull-right">@Model.TotalDue.ToString("0.00")</span></td>
-            </tr>
-        </tbody>
-    </table>
+<div id="billstablecontainer">
+    @Html.Action("GetBills")
 </div>
 
-<div class="col-md-4 form-horizontal" id="payGroup">
-    <div class="row">&nbsp;</div>
-    <div class="form-group">
-        @Html.Label("Last Pay Day", new { @class = "col-md-3" })
-        <div class="col-md-6">
-            @Model.LastPayDay.ToString("MM/dd/yyyy")
-        </div>
-    </div>
-    <div class="form-group">
-        @Html.Label("Next Pay Day", new { @class = "col-md-3" })
-        <div class="col-md-6">
-            @Model.NextPayDay.ToString("MM/dd/yyyy")
-        </div>
-    </div>
-    @using (Html.BeginForm("Index", "Bills", FormMethod.Post))
+
+
+@*
+    SELECT [name]
+          ,[amount]
+          ,[pay_type]
+          ,[day_of_month]
+          ,[seed_date]
+          ,[day_of_week]
+          ,[pay_interval]
+      FROM [dbo].[bills]
+*@
+
+<div id="newbill-dialog-form" title="Create new Bill">
+    @using(Ajax.BeginForm("AddBill","Bills", null, 
+        new AjaxOptions { HttpMethod = "POST", InsertionMode = InsertionMode.Replace, UpdateTargetId = "billstablecontainer", OnSuccess = "" },
+        new { @id = "newbillform" }))
     {
-        <div class="form-group">
-            @Html.Label("Date", new { @class = "col-md-2 control-label" })
-            <div class="col-md-4">
-                @Html.TextBox("Date", DateTime.Now.ToShortDateString(), new { @class = "form-control" })
+        <fieldset>
+            <div class="form-group">
+                @Html.Label("How often is this bill payed?", new { @for = "interval" })
+                @Html.DropDownList("interval",
+                (new List<SelectListItem>() {
+                    new SelectListItem { Value = "m", Text = "Monthly" } ,
+                    new SelectListItem { Value = "b", Text = "Bi-Weekly" },
+                    //new SelectListItem { Value = "w", Text = "Weekly" }
+                }),
+                "Choose a Pay Interval", new { @class = "form-control" })
             </div>
-        </div>
-        <div class="form-group">
-            <div class="col-md-6">
-                <input type="submit" value="submit" class="btn btn-sm btn-success pull-right" />
+            <div class="form-group">
+                @Html.Label("Bill Name", new { @for = "name" })
+                @Html.TextArea("name", new { @class="form-control"})
             </div>
-        </div>
+            <div class="form-group">
+                @Html.Label("Bill Amount", new { @for = "amount" })
+                @Html.TextArea("amount", new { @class = "form-control" })
+            </div>
+            <div id="dayofweekgroup" style="display:none;">
+                <div class="form-group">
+                    @Html.Label("What day is this bill payed?", new { @for = "dayofweek" })
+                    @Html.DropDownList("dayofweek",
+                    (new List<SelectListItem>()
+                    {
+                        new SelectListItem { Value = "1", Text = "Monday" },
+                        new SelectListItem { Value = "2", Text = "Tuesday" },
+                        new SelectListItem { Value = "3", Text = "Wednesday" },
+                        new SelectListItem { Value = "4", Text = "Thursday" },
+                        new SelectListItem { Value = "5", Text = "Friday" },
+                        new SelectListItem { Value = "6", Text = "Saturday" },
+                        new SelectListItem { Value = "7", Text = "Sunday" },
+                    }),
+                    "Choose a Day", new { @class = "form-control" })
+                </div>
+                <div class="form-group">
+                    @Html.Label("When was the last time this bill was payed?", new { @for = "seedpayday" })
+                    @Html.TextArea("seedpayday", new { @class = "form-control" })
+                </div>
+            </div>
+            <div id="dayofmonthgroup" style="display:none;">
+                <div class="form-group">
+                    @Html.Label("What day of the month is this bill payed", new { @for = "dayofmonth" })
+                    @Html.TextArea("dayofmonth", new { @type = "number", @class = "form-control" })
+                </div>
+            </div>
+        </fieldset>
     }
 </div>
 
-@*<div id="newBillModal" class="modal fade" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">New Bill</h4>
-            </div>
-            <div class="modal-body">
-                <p>One fine body&hellip;</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save changes</button>
-            </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
-<div class="col-md-3">
-    <div class="form-horizontal">
-        <div class="col-md-3">
-            <button type="button" data-toggle="modal" data-target="#newBillModal" class="btn btn-success">New Bill</button>
-        </div>
-    </div>
-</div>*@
-
-
+<div id="deletebill-dialog-confirm" title="Are you sure?">
+    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>This bill will be permanently deleted and cannot be recovered. Are you sure?</p>
+    <input type="hidden" id="deletebillname" />
+</div>
 
 @section scripts{
     <script>
+
         $(function () {
             $("#Date").datepicker();
             $("#PayDay").datepicker();
+            $("#seedpayday").datepicker();
+        });
+
+        function initDatepicker() {
+            $("#Date").datepicker();
+        }
+
+        $("#deletebill-dialog-confirm").dialog({
+            autoOpen: false,
+            resizable: false,
+            height: "auto",
+            width: 400,
+            modal: true,
+            buttons: {
+                "Delete Bill": function () {
+                    deleteBill();
+                    $(this).dialog("close");
+                },
+                Cancel: function () {
+                    $(this).dialog("close");
+                }
+            },
+            close: function() {
+                $("#deletebillname").val("");
+            }
+        });
+
+        function deleteBill() {
+            var bill = $("#deletebillname").val();
+            $.post("/Bills/DeleteBill", { Name: bill }, function (result) {
+                $("#billstablecontainer").html(result);
+            });
+        }
+
+
+        $("#newbill-dialog-form").dialog({
+            autoOpen: false,
+            height: "auto",
+            width: 340,
+            modal: true,
+            show: {
+                effect: "fade",
+                duration: 500
+            },
+            hide: {
+                effect: "explode",
+                duration: 1000
+            },
+            buttons: {
+                "Save": function () {
+                    $("#newbillform").submit();
+                    $("#newbill-dialog-form").dialog("close");
+                },
+                "Cancel": function () {
+                    $("#newbill-dialog-form").dialog("close");
+                }
+            },
+            close: function () {
+                $("#newbill-dialog-form form")[0].reset();
+            }
+        });
+
+        $(document).on("change", "#interval", function () {
+            var val = $(this).val();
+
+            if (val == "b" || val == "w") {
+                $("#dayofweekgroup").show();
+                $("#dayofmonthgroup").hide();
+            }
+
+            if (val == "m") {
+                $("#dayofmonthgroup").show();
+                $("#dayofweekgroup").hide();
+            }
+
+            if (val == "") {
+                $("#dayofweekgroup").hide();
+                $("#dayofmonthgroup").hide();
+            }
+
         });
 
         $("#Date").change(function () {
 
+        });
+
+        $(document).on("click", "td[data-control='delete']", function () {
+            var name = $(this).data("id");
+            $("#deletebillname").val(name);
+            $("#deletebill-dialog-confirm").dialog("open");
+        });
+
+        $(document).on("click", "th[data-control='add']", function () {
+            $("#newbill-dialog-form").dialog("open");
         });
 
         function sortTable(tbl, col, order) {
@@ -157,7 +258,7 @@
             $(this).data("sort", order);
         }
 
-        $("th").click(sortByHeader);
+        $(document).on("click", "th[data-control='sort']", sortByHeader);
 
 
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace myBills.web.Models
 {
@@ -74,6 +75,7 @@ namespace myBills.web.Models
         {
             var month = date.Month;
             var day = date.Day;
+            var year = date.Year;
 
             if (PayType == PaymentType.DayOfWeek)
             {
@@ -83,19 +85,33 @@ namespace myBills.web.Models
                 return nextDate == date.AddDays(i) ? date : nextDate;
             }
 
-            if (DayOfMonth >= day)
+            //If the DayOfMonth that bill is to be payed is before today, then the bill is due next month
+            if(DayOfMonth < day)
             {
-                //Bill Due Date is the same month as date
-                return new DateTime(date.Year, date.Month, DayOfMonth);
+                month++;
+
+                //If month is december and bill is due next month then bill is due in the next year
+                if (month == 12)
+                {
+                    year++;
+                }
             }
 
-            //If month is december then bill is due in the next year
-            if (month == 12)
+            //Handle invalid February Dates
+            if (month == 2 && (new[] { 29, 30, 31 }).Contains(DayOfMonth))
             {
-                return new DateTime(date.Year + 1, 1, DayOfMonth);
+                month++;
+                DayOfMonth = (DayOfMonth - (DateTime.IsLeapYear(year) ? 29: 28));
             }
 
-            return new DateTime(date.Year, month + 1, DayOfMonth);
+            //Handle invalid dates 
+            if ((new[] { 4,6,9,11 }).Contains(month) && DayOfMonth == 30)
+            {
+                month++;
+                DayOfMonth = 1;
+            }
+
+            return new DateTime(year, month, DayOfMonth);
         }
 
         public DateTime NextDueDate()

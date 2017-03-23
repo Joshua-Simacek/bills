@@ -1,0 +1,74 @@
+﻿@model myBills.web.Models.BillsViewModel
+
+<div class="col-md-3">
+    <table class="table table-condensed tabe-hover" id="billsTable">
+        <thead>
+            <tr>
+                <th data-control="add">+</th>
+                <th id="nameHeader" data-control="sort" data-type="string">Name</th>
+                <th id="sp1">&nbsp;</th>
+                <th id="amountHeader" data-control="sort" data-type="money">Amount</th>
+                <th id="sp2">&nbsp;</th>
+                <th id="dueHeader" data-control="sort" data-type="date">Due</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var bill in Model.Bills)
+            {
+                var css = bill.NextDueDate(Model.LastPayDay) < Model.NextPayDay ? "text-danger" : "";
+                <tr class="@css">
+                    <td data-id="@bill.Name" data-control="delete">&times;</td>
+                    <td>@bill.Name</td>
+                    <td>&nbsp;</td>
+                    <td>
+                        $<span class="pull-right">
+                            @bill.Amount.ToString("0.00")
+                        </span>
+                    </td>
+                    <td>&nbsp;</td>
+                    <td class="text-right">@bill.NextDueDate(Model.LastPayDay).ToString("MM/dd/yyyy")</td>
+                </tr>
+            }
+            <tr data-ignore="true">
+                <td></td>
+                <td class="text-right">Total:</td>
+                <td></td>
+                <td>$<span class="pull-right">@Model.Total.ToString("0.00")</span></td>
+                <td></td>
+                <td id="totalDue">$<span class="text-danger pull-right">@Model.TotalDue.ToString("0.00")</span></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@*ToDo: Move out of this partial*@
+<div class="col-md-4 form-horizontal" id="payGroup">
+    <div class="row">&nbsp;</div>
+    <div class="form-group">
+        @Html.Label("Last Pay Day", new { @class = "col-md-3" })
+        <div class="col-md-6">
+            @Model.LastPayDay.ToString("MM/dd/yyyy")
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.Label("Next Pay Day", new { @class = "col-md-3" })
+        <div class="col-md-6">
+            @Model.NextPayDay.ToString("MM/dd/yyyy")
+        </div>
+    </div>
+    @using (Ajax.BeginForm("GetBills", "Bills", null,
+                new AjaxOptions { HttpMethod = "POST", InsertionMode = InsertionMode.Replace, UpdateTargetId = "billstablecontainer", OnSuccess = "initDatepicker" }))
+    {
+        <div class="form-group">
+            @Html.Label("Date", new { @class = "col-md-3 text-right" })
+            <div class="col-md-4">
+                @Html.TextBox("Date", DateTime.Now.ToShortDateString(), new { @class = "text ui-widget-content ui-corner-all" })
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-6">
+                <input type="submit" value="submit" class="btn btn-sm btn-success pull-right" />
+            </div>
+        </div>
+    }
+</div>
