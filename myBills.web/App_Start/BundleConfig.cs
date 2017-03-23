@@ -1,5 +1,4 @@
-﻿using System.Web;
-using System.Web.Optimization;
+﻿using System.Web.Optimization;
 
 namespace myBills.web
 {
@@ -11,8 +10,7 @@ namespace myBills.web
             bundles.Add(new ScriptBundle("~/bundles/jquery").Include(
                         "~/Scripts/jquery-{version}.js",
                         "~/Scripts/jquery-ui-{version}.js",
-                        "~/Scripts/jquery.bootgrid.js",
-                        "~/Scripts/jquery.bootgrid.fa.js"));
+                        "~/Scripts/jquery.unobtrusive-ajax.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/jqueryval").Include(
                         "~/Scripts/jquery.validate*"));
@@ -30,6 +28,7 @@ namespace myBills.web
                       "~/Content/bootstrap.css",
                       "~/Content/site.css",
                       "~/Content/themes/base/jquery-ui.css",
+                      "~/Content/themese/base/all.css",
                       "~/Content/jquery.bootgrid.css"));
         }
     }
